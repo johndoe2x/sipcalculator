@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Investment Calculator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <style>
+    body {
+      background-color: #f0f7ff;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      color: #1e3a8a;
+    }
+    
+    .calculator-container {
+      max-width: 650px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    /* Light/Dark mode toggle switch */
+    .theme-switch-wrapper {
+      display: flex;
+      align-items: center;
+    }
+    
+    .theme-switch {
+      display: inline-block;
+      height: 20px;
+      position: relative;
+      width: 45px;
+      margin: 0 8px;
+    }
+
+    .theme-switch input {
+      display: none;
+    }
+
+    .slider {
+      background-color: #e2e8f0;
+      bottom: 0;
+      cursor: pointer;
+      left: 0;
+      position: absolute;
+      right: 0;
+      top: 0;
+      transition: .4s;
+      border-radius: 34px;
+    }
+
+    .slider:before {
+      background-color: #fff;
+      bottom: 2px;
+      content: "";
+      height: 16px;
+      left: 2px;
+      position: absolute;
+      transition: .4s;
+      width: 16px;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: #3b82f6;
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+    
+    /* Tab Container */
+    .tab-container {
+      display: flex;
+      overflow: hidden;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    
+    .tab {
+      flex: 1;
+      padding: 12px;
+      text-align: center;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    
+    .tab.active {
+      background-color: #2563eb;
+      color: white;
+      font-weight: 500;
+    }
+    
+    .tab.inactive {
+      background-color: #e2e8f0;
+      color: #64748b;
+      font-weight: 500;
+    }
+    
+    /* Calculator content area */
+    .calculator-content {
+      background-color: white;
+      border-radius: 8px;
+      padding: 20px;
+    }
+    
+    /* Input Field Styling */
+    .field-label {
+      color: #1e40af;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+    
+    .input-field {
+      width: 100%;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 8px 12px;
+      outline: none;
+    }
+    
+    /* Range input styling */
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 4px;
+      border-radius: 5px;
+      background: #dbeafe;
+      outline: none;
+    }
+    
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #3b82f6;
+      cursor: pointer;
+    }
+    
+    input[type="range"]::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #3b82f6;
+      cursor: pointer;
+      border: none;
+    }
+    
+    /* Hide number input arrows */
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    
+    input[type="number"] {
+      -moz-appearance: textfield;
+    }
+    
+    /* Results section */
+    .results-table {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      background-color: #f0f9ff;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-top: 20px;
+    }
+    
+    .result-cell {
+      padding: 10px;
+      text-align: center;
+    }
+    
+    .result-cell:nth-child(2) {
+      border-left: 1px solid #dbeafe;
+      border-right: 1px solid #dbeafe;
+    }
+    
+    .result-label {
+      font-size: 12px;
+      color: #3b82f6;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+    
+    .result-value {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1e40af;
+    }
+    
+    .result-value.returns {
+      color: #16a34a;
+    }
+    
+    /* Dark mode styles */
+    .dark {
+      background-color: #0f172a;
+      color: #f8fafc;
+    }
+    
+    .dark .calculator-content {
+      background-color: #1e293b;
+    }
+    
+    .dark .field-label {
+      color: #93c5fd;
+    }
+    
+    .dark .input-field {
+      background-color: #334155;
+      border-color: #475569;
+      color: #f8fafc;
+    }
+    
+    .dark input[type="range"] {
+      background: #1e40af;
+    }
+    
+    .dark .results-table {
+      background-color: #1e3a8a;
+    }
+    
+    .dark .result-cell:nth-child(2) {
+      border-color: #2563eb;
+    }
+    
+    .dark .result-label {
+      color: #93c5fd;
+    }
+    
+    .dark .result-value {
+      color: #dbeafe;
+    }
+    
+    .dark .result-value.returns {
+      color: #86efac;
+    }
+  </style>
+</head>
+<body>
+  <div class="calculator-container">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-4">
+      <div class="flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-600">
+          <rect x="2" y="7" width="5" height="10"></rect>
+          <rect x="9" y="5" width="5" height="14"></rect>
+          <rect x="16" y="3" width="5" height="18"></rect>
+        </svg>
+        <h1 class="text-2xl font-bold text-blue-700">Investment Calculator</h1>
+      </div>
+      
+      <div class="theme-switch-wrapper">
+        <span class="text-yellow-500">☀️</span>
+        <label class="theme-switch">
+          <input type="checkbox" id="themeToggle">
+          <span class="slider"></span>
+        </label>
+        <span class="text-gray-400">🌙</span>
+      </div>
+    </div>
+    
+    <p class="text-center text-gray-600 mb-6">Plan your financial future with precision</p>
+    
+    <!-- Tab Container -->
+    <div class="tab-container">
+      <div id="sipTab" class="tab active">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        SIP Calculator
+      </div>
+      <div id="targetTab" class="tab inactive">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <circle cx="12" cy="12" r="6"></circle>
+          <circle cx="12" cy="12" r="2"></circle>
+        </svg>
+        Target SIP
+      </div>
+    </div>
+    
+    <!-- Calculator Content -->
+    <div class="calculator-content">
+      <!-- SIP Calculator -->
+      <div id="sipContent" class="space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <div class="field-label">Monthly Investment</div>
+            <div class="relative">
+              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">₹</span>
+              <input 
+                id="sipAmount" 
+                type="number" 
+                value="15000" 
+                class="input-field pl-6"
+              />
+            </div>
+          </div>
+          <div>
+            <div class="field-label">Annual Return %</div>
+            <div class="relative">
+              <input 
+                id="sipReturn" 
+                type="number" 
+                value="12" 
+                class="input-field pr-6"
+              />
+              <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">%</span>
+            </div>
+          </div>
+        </div>
+        
+        <div>
+          <div class="field-label">Investment Period (Years)</div>
+          <div class="flex items-center gap-4">
+            <input 
+              id="sipTenure" 
+              type="range" 
+              min="1" 
+              max="30" 
+              value="5" 
+              class="flex-1"
+            />
+            <div class="relative w-20">
+              <input 
+                id="sipTenureValue" 
+                type="number" 
+                min="1" 
+                max="30" 
+                value="5" 
+                class="input-field text-center"
+              />
+              <span class="absolute right-1 -bottom-5 text-xs text-blue-600">Years</span>
+            </div>
+          </div>
+        </div>
+        
+        <div>
+          <div class="field-label">Annual Step-up %</div>
+          <div class="flex items-center gap-4">
+            <input 
+              id="sipStepUp" 
+              type="range" 
+              min="0" 
+              max="20" 
+              value="0" 
+              class="flex-1"
+            />
+            <div class="relative w-20">
+              <input 
+                id="sipStepUpValue" 
+                type="number" 
+                min="0" 
+                max="20" 
+                value="0" 
+                class="input-field text-center"
+              />
+              <span class="absolute right-1 -bottom-5 text-xs text-blue-600">%/Year</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Results -->
+        <div class="results-table">
+          <div class="result-cell">
+            <div class="result-label">Invested</div>
+            <div id="sipInvested" class="result-value">₹9.00 Lakh</div>
+          </div>
+          <div class="result-cell">
+            <div class="result-label">Returns</div>
+            <div id="sipReturns" class="result-value returns">₹3.37 Lakh</div>
+          </div>
+          <div class="result-cell">
+            <div class="result-label">Final Value</div>
+            <div id="sipFinalValue" class="result-value">₹12.37 Lakh</div>
+          </div>
+        </div>
+        
+        <!-- Chart -->
+        <div class="mt-4 h-56 bg-white border border-gray-200 rounded-lg p-3">
+          <canvas id="sipChart"></canvas>
+        </div>
+      </div>
+      
+      <!-- Target SIP Calculator (Hidden by default) -->
+      <div id="targetContent" class="space-y-6 hidden">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <div class="field-label">Target Amount</div>
+            <div class="relative">
+              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">₹</span>
+              <input 
+                id="targetAmount" 
+                type="number" 
+                value="1000000" 
+                class="input-field pl-6"
+              />
+            </div>
+          </div>
+          <div>
+            <div class="field-label">Annual Return %</div>
+            <div class="relative">
+              <input 
+                id="targetReturn" 
+                type="number" 
+                value="12" 
+                class="input-field pr-6"
+              />
+              <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">%</span>
+            </div>
+          </div>
+        </div>
+        
+        <div>
+          <div class="field-label">Time to Target (Years)</div>
+          <div class="flex items-center gap-4">
+            <input 
+              id="targetYears" 
+              type="range" 
+              min="1" 
+              max="30" 
+              value="5" 
+              class="flex-1"
+            />
+            <div class="relative w-20">
+              <input 
+                id="targetYearsValue" 
+                type="number" 
+                min="1" 
+                max="30" 
+                value="5" 
+                class="input-field text-center"
+              />
+              <span class="absolute right-1 -bottom-5 text-xs text-blue-600">Years</span>
+            </div>
+          </div>
+        </div>
+        
+        <div>
+          <div class="field-label">Annual Step-up %</div>
+          <div class="flex items-center gap-4">
+            <input 
+              id="targetStepUp" 
+              type="range" 
+              min="0" 
+              max="20" 
+              value="0" 
+              class="flex-1"
+            />
+            <div class="relative w-20">
+              <input 
+                id="targetStepUpValue" 
+                type="number" 
+                min="0" 
+                max="20" 
+                value="0" 
+                class="input-field text-center"
+              />
+              <span class="absolute right-1 -bottom-5 text-xs text-blue-600">%/Year</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Results -->
+        <div class="results-table" style="background-color: #f5f3ff;">
+          <div class="result-cell">
+            <div class="result-label" style="color: #7c3aed;">Monthly SIP</div>
+            <div id="targetMonthly" class="result-value" style="color: #6d28d9;">₹14,832</div>
+          </div>
+          <div class="result-cell" style="border-left: 1px solid #e9d5ff; border-right: 1px solid #e9d5ff;">
+            <div class="result-label" style="color: #db2777;">To Invest</div>
+            <div id="targetInvested" class="result-value" style="color: #be185d;">₹8.90 Lakh</div>
+          </div>
+          <div class="result-cell">
+            <div class="result-label" style="color: #8b5cf6;">Returns</div>
+            <div id="targetReturns" class="result-value" style="color: #7c3aed;">₹1.10 Lakh</div>
+          </div>
+        </div>
+        
+        <!-- Chart -->
+        <div class="mt-4 h-56 bg-white border border-gray-200 rounded-lg p-3">
+          <canvas id="targetChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Theme switching
+    const themeToggle = document.getElementById('themeToggle');
+    const body = document.body;
+    
+    // Check for saved theme preference
+    if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      body.classList.add('dark');
+      themeToggle.checked = true;
+    }
+    
+    themeToggle.addEventListener('change', function() {
+      if (this.checked) {
+        body.classList.add('dark');
+        localStorage.theme = 'dark';
+      } else {
+        body.classList.remove('dark');
+        localStorage.theme = 'light';
+      }
+      
+      // Update charts based on theme
+      updateSIPChart();
+      updateTargetChart();
+    });
+    
+    // Tab switching
+    const sipTab = document.getElementById('sipTab');
+    const targetTab = document.getElementById('targetTab');
+    const sipContent = document.getElementById('sipContent');
+    const targetContent = document.getElementById('targetContent');
+    
+    sipTab.addEventListener('click', function() {
+      sipTab.classList.add('active');
+      sipTab.classList.remove('inactive');
+      targetTab.classList.add('inactive');
+      targetTab.classList.remove('active');
+      
+      sipContent.classList.remove('hidden');
+      targetContent.classList.add('hidden');
+      
+      // Update SIP chart
+      setTimeout(() => {
+        updateSIPChart();
+      }, 100);
+    });
+    
+    targetTab.addEventListener('click', function() {
+      targetTab.classList.add('active');
+      targetTab.classList.remove('inactive');
+      sipTab.classList.add('inactive');
+      sipTab.classList.remove('active');
+      
+      targetContent.classList.remove('hidden');
+      sipContent.classList.add('hidden');
+      
+      // Update Target chart
+      setTimeout(() => {
+        updateTargetChart();
+      }, 100);
+    });
+    
+    // Form elements
+    const sipAmount = document.getElementById('sipAmount');
+    const sipReturn = document.getElementById('sipReturn');
+    const sipTenure = document.getElementById('sipTenure');
+    const sipTenureValue = document.getElementById('sipTenureValue');
+    const sipStepUp = document.getElementById('sipStepUp');
+    const sipStepUpValue = document.getElementById('sipStepUpValue');
+    
+    const targetAmount = document.getElementById('targetAmount');
+    const targetReturn = document.getElementById('targetReturn');
+    const targetYears = document.getElementById('targetYears');
+    const targetYearsValue = document.getElementById('targetYearsValue');
+    const targetStepUp = document.getElementById('targetStepUp');
+    const targetStepUpValue = document.getElementById('targetStepUpValue');
+    
+    // Result displays
+    const sipInvested = document.getElementById('sipInvested');
+    const sipReturns = document.getElementById('sipReturns');
+    const sipFinalValue = document.getElementById('sipFinalValue');
+    const targetMonthly = document.getElementById('targetMonthly');
+    const targetInvested = document.getElementById('targetInvested');
+    const targetReturns = document.getElementById('targetReturns');
+    
+    // Sync range and number inputs
+    sipTenure.addEventListener('input', () => {
+      sipTenureValue.value = sipTenure.value;
+      calculateSIP();
+    });
+    
+    sipTenureValue.addEventListener('input', () => {
+      sipTenure.value = Math.max(1, Math.min(30, sipTenureValue.value || 1));
+      sipTenureValue.value = sipTenure.value;
+      calculateSIP();
+    });
+    
+    sipStepUp.addEventListener('input', () => {
+      sipStepUpValue.value = sipStepUp.value;
+      calculateSIP();
+    });
+    
+    sipStepUpValue.addEventListener('input', () => {
+      sipStepUp.value = Math.max(0, Math.min(20, sipStepUpValue.value || 0));
+      sipStepUpValue.value = sipStepUp.value;
+      calculateSIP();
+    });
+    
+    targetYears.addEventListener('input', () => {
+      targetYearsValue.value = targetYears.value;
+      calculateTargetSIP();
+    });
+    
+    targetYearsValue.addEventListener('input', () => {
+      targetYears.value = Math.max(1, Math.min(30, targetYearsValue.value || 1));
+      targetYearsValue.value = targetYears.value;
+      calculateTargetSIP();
+    });
+    
+    targetStepUp.addEventListener('input', () => {
+      targetStepUpValue.value = targetStepUp.value;
+      calculateTargetSIP();
+    });
+    
+    targetStepUpValue.addEventListener('input', () => {
+      targetStepUp.value = Math.max(0, Math.min(20, targetStepUpValue.value || 0));
+      targetStepUpValue.value = targetStepUp.value;
+      calculateTargetSIP();
+    });
+    
+    // Input change handlers
+    sipAmount.addEventListener('input', calculateSIP);
+    sipReturn.addEventListener('input', calculateSIP);
+    targetAmount.addEventListener('input', calculateTargetSIP);
+    targetReturn.addEventListener('input', calculateTargetSIP);
+    
+    // Format currency helper
+    function formatCurrency(value, decimals = 2) {
+      if (value >= 10000000) {
+        return (value / 10000000).toFixed(decimals) + ' Cr';
+      } else if (value >= 100000) {
+        return (value / 100000).toFixed(decimals) + ' Lakh';
+      } else if (value >= 1000) {
+        return (value / 1000).toFixed(decimals) + 'k';
+      } else {
+        return value.toFixed(decimals);
+      }
+    }
+    
+    // SIP Calculation Function
+    function calculateSIP() {
+      const amount = parseFloat(sipAmount.value) || 0;
+      const rate = parseFloat(sipReturn.value) || 0;
+      const years = parseInt(sipTenure.value) || 0;
+      const stepUp = parseFloat(sipStepUp.value) || 0;
+      
+      const monthlyRate = rate / (12 * 100);
+      const months = years * 12;
+      
+      let totalInvestment = 0;
+      let futureValue = 0;
+      const yearlyValues = [];
+      const investedValues = [];
+      
+      let currentMonthlyAmount = amount;
+      
+      for (let i = 1; i <= months; i++) {
+        totalInvestment += currentMonthlyAmount;
+        futureValue = (futureValue + currentMonthlyAmount) * (1 + monthlyRate);
+        
+        // Annual step-up
+        if (i % 12 === 0 && i < months) {
+          currentMonthlyAmount *= (1 + stepUp / 100);
+        }
+        
+        // Store data for chart (yearly)
+        if (i % 12 === 0 || i === months) {
+          yearlyValues.push(Math.round(futureValue));
+          investedValues.push(Math.round(totalInvestment));
+        }
+      }
+      
+      // Update display
+      sipInvested.textContent = `₹${formatCurrency(totalInvestment)}`;
+      sipReturns.textContent = `₹${formatCurrency(futureValue - totalInvestment)}`;
+      sipFinalValue.textContent = `₹${formatCurrency(futureValue)}`;
+      
+      // Update chart
+      updateSIPChart(investedValues, yearlyValues);
+      
+      return {
+        invested: totalInvestment,
+        returns: futureValue - totalInvestment,
+        finalValue: futureValue,
+        investedValues,
+        yearlyValues
+      };
+    }
+    
+    // Target SIP Calculation Function
+    function calculateTargetSIP() {
+      const targetCorpus = parseFloat(targetAmount.value) || 0;
+      const rate = parseFloat(targetReturn.value) || 0;
+      const years = parseInt(targetYears.value) || 0;
+      const stepUp = parseFloat(targetStepUp.value) || 0;
+      
+      // Calculate required monthly SIP
+      let monthlySIP;
+      
+      if (stepUp === 0) {
+        // Simple formula for regular SIP
+        const monthlyRate = rate / (12 * 100);
+        const months = years * 12;
+        monthlySIP = targetCorpus / (((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate) * (1 + monthlyRate));
+      } else {
+        // For SIP with step-up, use binary search to find the closest value
+        monthlySIP = findTargetSIP(targetCorpus, rate, years, stepUp);
+      }
+      
+      // Calculate the final values based on the SIP
+      const result = calculateSIPWithAmount(monthlySIP, rate, years, stepUp);
+      
+      // Update display
+      targetMonthly.textContent = `₹${formatCurrency(monthlySIP, 0)}`;
+      targetInvested.textContent = `₹${formatCurrency(result.invested)}`;
+      targetReturns.textContent = `₹${formatCurrency(result.returns)}`;
+      
+      // Update chart
+      updateTargetChart(result.investedValues, result.yearlyValues, targetCorpus);
+      
+      return {
+        monthlySIP,
+        invested: result.invested,
+        returns: result.returns,
+        investedValues: result.investedValues,
+        yearlyValues: result.yearlyValues
+      };
+    }
+    
+    // Helper function to find the required monthly SIP for target amount
+    function findTargetSIP(targetAmount, rate, years, stepUp) {
+      let low = 1;
+      let high = targetAmount / (years * 12);
+      let best = low;
+      let bestDiff = Infinity;
+      
+      for (let i = 0; i < 20; i++) { // Limit iterations for performance
+        const mid = (low + high) / 2;
+        const result = calculateSIPWithAmount(mid, rate, years, stepUp);
+        
+        const diff = Math.abs(result.finalValue - targetAmount);
+        
+        if (diff < bestDiff) {
+          bestDiff = diff;
+          best = mid;
+        }
+        
+        if (result.finalValue < targetAmount) {
+          low = mid;
+        } else {
+          high = mid;
+        }
+      }
+      
+      return best;
+    }
+    
+    // Helper function to calculate SIP outcome for a given monthly amount
+    function calculateSIPWithAmount(amount, rate, years, stepUp) {
+      const monthlyRate = rate / (12 * 100);
+      const months = years * 12;
+      
+      let totalInvestment = 0;
+      let futureValue = 0;
+      const yearlyValues = [];
+      const investedValues = [];
+      
+      let currentMonthlyAmount = amount;
+      
+      for (let i = 1; i <= months; i++) {
+        totalInvestment += currentMonthlyAmount;
+        futureValue = (futureValue + currentMonthlyAmount) * (1 + monthlyRate);
+        
+        // Annual step-up
+        if (i % 12 === 0 && i < months) {
+          currentMonthlyAmount *= (1 + stepUp / 100);
+        }
+        
+        // Store data for chart (yearly)
+        if (i % 12 === 0 || i === months) {
+          yearlyValues.push(Math.round(futureValue));
+          investedValues.push(Math.round(totalInvestment));
+        }
+      }
+      
+      return {
+        invested: totalInvestment,
+        returns: futureValue - totalInvestment,
+        finalValue: futureValue,
+        investedValues,
+        yearlyValues
+      };
+    }
+    
+    // Charts
+    let sipChartInstance = null;
+    let targetChartInstance = null;
+    
+    function updateSIPChart(investedValues, totalValues) {
+      const ctx = document.getElementById('sipChart');
+      
+      if (sipChartInstance) {
+        sipChartInstance.destroy();
+      }
+      
+      if (!investedValues || !totalValues) {
+        const result = calculateSIP();
+        investedValues = result.investedValues;
+        totalValues = result.yearlyValues;
+      }
+      
+      const years = parseInt(sipTenure.value) || 0;
+      const labels = Array.from({ length: years + 1 }, (_, i) => `${i}Y`);
+      
+      // Ensure correct length
+      while (investedValues.length < labels.length - 1) {
+        investedValues.push(investedValues[investedValues.length - 1] || 0);
+      }
+      
+      while (totalValues.length < labels.length - 1) {
+        totalValues.push(totalValues[totalValues.length - 1] || 0);
+      }
+      
+      // Prepend 0 for year 0
+      investedValues = [0, ...investedValues];
+      totalValues = [0, ...totalValues];
+      
+      // Theme colors
+      const isDark = body.classList.contains('dark');
+      const textColor = isDark ? '#e5e7eb' : '#374151';
+      const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)';
+      
+      sipChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Amount Invested',
+              data: investedValues,
+              backgroundColor: 'rgba(59, 130, 246, 0.2)',
+              borderColor: 'rgba(59, 130, 246, 1)',
+              borderWidth: 2,
+              pointRadius: 3,
+              tension: 0.3
+            },
+            {
+              label: 'Total Value',
+              data: totalValues,
+              backgroundColor: 'rgba(16, 185, 129, 0.2)',
+              borderColor: 'rgba(16, 185, 129, 1)',
+              borderWidth: 2,
+              pointRadius: 3,
+              tension: 0.3,
+              fill: true
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+              align: 'start',
+              labels: {
+                boxWidth: 10,
+                usePointStyle: true,
+                pointStyle: 'circle',
+                padding: 15,
+                color: textColor,
+                font: {
+                  size: 11
+                }
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return context.dataset.label + ': ₹' + formatCurrency(context.raw);
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: {
+                display: false
+              },
+              ticks: {
+                color: textColor,
+                font: {
+                  size: 10
+                }
+              }
+            },
+            y: {
+              beginAtZero: true,
+              grid: {
+                color: gridColor
+              },
+              ticks: {
+                color: textColor,
+                font: {
+                  size: 10
+                },
+                callback: function(value) {
+                  return '₹' + formatCurrency(value);
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+    
+    function updateTargetChart(investedValues, totalValues, targetAmount) {
+      const ctx = document.getElementById('targetChart');
+      
+      if (targetChartInstance) {
+        targetChartInstance.destroy();
+      }
+      
+      if (!investedValues || !totalValues) {
+        const result = calculateTargetSIP();
+        investedValues = result.investedValues;
+        totalValues = result.yearlyValues;
+        targetAmount = parseFloat(targetAmount.value) || 0;
+      }
+      
+      const years = parseInt(targetYears.value) || 0;
+      const labels = Array.from({ length: years + 1 }, (_, i) => `${i}Y`);
+      
+      // Ensure correct length
+      while (investedValues.length < labels.length - 1) {
+        investedValues.push(investedValues[investedValues.length - 1] || 0);
+      }
+      
+      while (totalValues.length < labels.length - 1) {
+        totalValues.push(totalValues[totalValues.length - 1] || 0);
+      }
+      
+      // Prepend 0 for year 0
+      investedValues = [0, ...investedValues];
+      totalValues = [0, ...totalValues];
+      
+      // Create target line
+      const targetLine = Array(labels.length).fill(targetAmount);
+      targetLine[0] = 0; // Start at 0
+      
+      // Theme colors
+      const isDark = body.classList.contains('dark');
+      const textColor = isDark ? '#e5e7eb' : '#374151';
+      const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)';
+      
+      targetChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Amount Invested',
+              data: investedValues,
+              backgroundColor: 'rgba(139, 92, 246, 0.2)',
+              borderColor: 'rgba(139, 92, 246, 1)',
+              borderWidth: 2,
+              pointRadius: 3,
+              tension: 0.3
+            },
+            {
+              label: 'Total Value',
+              data: totalValues,
+              backgroundColor: 'rgba(236, 72, 153, 0.2)',
+              borderColor: 'rgba(236, 72, 153, 1)',
+              borderWidth: 2,
+              pointRadius: 3,
+              tension: 0.3,
+              fill: true
+            },
+            {
+              label: 'Target Amount',
+              data: targetLine,
+              borderColor: 'rgba(251, 113, 133, 1)',
+              borderWidth: 1.5,
+              borderDash: [4, 4],
+              pointRadius: 0
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+              align: 'start',
+              labels: {
+                boxWidth: 10,
+                usePointStyle: true,
+                pointStyle: 'circle',
+                padding: 15,
+                color: textColor,
+                font: {
+                  size: 11
+                }
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return context.dataset.label + ': ₹' + formatCurrency(context.raw);
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: {
+                display: false
+              },
+              ticks: {
+                color: textColor,
+                font: {
+                  size: 10
+                }
+              }
+            },
+            y: {
+              beginAtZero: true,
+              grid: {
+                color: gridColor
+              },
+              ticks: {
+                color: textColor,
+                font: {
+                  size: 10
+                },
+                callback: function(value) {
+                  return '₹' + formatCurrency(value);
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+    
+    // Initialize on page load
+    window.addEventListener('DOMContentLoaded', function() {
+      calculateSIP();
+      calculateTargetSIP();
+    });
+  </script>
+</body>
+</html>
